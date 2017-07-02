@@ -14,7 +14,12 @@
 (function() {
 
     var dev = true;
+
     var kh = {
+        state: {
+            chosen_pledge: 0,
+            pledges: []
+        },
 
         param: {
             execute: false,
@@ -37,6 +42,23 @@
             get: function(name) {
                 return JSON.parse(GM_getValue(name));
             }
+        },
+
+        initState: function() {
+            $(".pledge-page-rewards > .pledge-selectable:not(.pledge--no-reward)").each(function(i, k) {
+                // kh.state.pledges.push{}
+                var pledge = {
+                    id: $(this).find(".pledge__radio").attr("value"),
+                    name: $(this).find(".pledge__title").text(),
+                    amount: $(this).find(".pledge__amount").text()
+                };
+                if ($(this).hasClass("pledge--backed")) {
+                    kh.state.chosen_pledge = pledge;
+                } else {
+                    kh.state.pledges.push(pledge);
+                }
+            })
+            kh.debug("Init state - done", kh.state);
         },
 
         initParam: function() {
@@ -78,22 +100,31 @@
 
         panel: {
             init: function() {
-                $("#sidebar").append('<div class="NS_pledges__checkout_accountability important-notice kh_panel"><h6 class="important"><span class="highlight">Kickstarter Helper</span></h6><p class="kh_view_options">Your chosen pledge: ' + kh.param.options.toString() + '</p><p class="kh_execute"><button class="btn btn--green kh_execute_btn">Execute</button></div></p></div>');
+                $("#sidebar").append('<div class="NS_pledges__checkout_accountability important-notice kh_panel"><h6 class="important"><span class="highlight">Kickstarter Helper</span></h6><span class="important__subhead">Your Chosen Pledge</span><div class="kh_chosen_pledge"><p>- ' + kh.state.chosen_pledge.name + ' | ' + kh.state.chosen_pledge.amount + '</p></div><span class="important__subhead">Your ideal pledges:</span><div class="kn_ideal_pledges"></div><p class="kh_execute"><button class="btn btn--green kh_execute_btn">Execute</button></div></p></div>');
                 $(".kh_execute_btn").on("click", function() {
                     kh.storage.update("execute", true);
                     kh.refresher();
                 });
+                kh.panel.update();
             },
             update: function() {
-                $(".kh_view_options").html('Your chosen pledge:' + kh.param.options.toString());
+                var temp = "";
+                kh.param.options.map(function(id) {
+                    var pledge = kh.state.pledges.filter(function(i) {
+                        return i.id == id;
+                    })[0];
+                    temp = temp + '<p>- ' + pledge.name + ' | ' + pledge.amount + '</p>';
+
+                });
+                $(".kn_ideal_pledges").html(temp);
             }
         },
 
         addBtn: function() {
-            $(".pledge-page-rewards > li").each(function(k, n) {
+            $(".pledge-page-rewards > .pledge-selectable:not(.pledge--no-reward, .pledge--backed)").each(function(k, n) {
                 var pid = $(this).find(".pledge__radio").attr("value");
                 if ((dev ? true : $(this).find(".pledge__limit").hasClass("pledge__limit--all-gone"))) {
-                    $(this).find(".pledge__backer-stats").append('<div class="pledge__limit kh_select" style="background-color: #e0e4fb; border-radius: 0.66667px; color: #020621;font-weight: bold; padding: 2px 6px;">Notify me <input type="checkbox" name="pledge__extra-options" value="' + pid + '" /></div>');
+                    $(this).find(".pledge__backer-stats").append('<div class="pledge__limit kh_select" style="background-color: #e0e4fb; border-radius: 0.66667px; color: #020621;font-weight: bold; padding: 2px 6px;">Get me in!<input type="checkbox" name="pledge__extra-options" value="' + pid + '" /></div>');
                 }
             });
 
@@ -110,6 +141,7 @@
         main: function() {
             kh.initParam();
             kh.refresher();
+            kh.initState();
             kh.panel.init();
             kh.addBtn();
         }
