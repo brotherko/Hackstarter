@@ -12,7 +12,6 @@
 // ==/UserScript==
 
 (function() {
-
     var dev = true;
 
     var kh = {
@@ -68,8 +67,9 @@
         },
 
         refresher: function() {
-            kh.debug(kh.param);
+
             if (kh.param.execute == true) {
+                $("body").prepend('<div class="kh_refresher_stop" style="z-index: 9999; position: fixed; height: 100%; width: 100%; background: rgba(255, 255, 255, 0.5); color: #25cb68; font-size: 20pt; font-weight: bold; padding: 30px">Click on anywhere to stop ... </div>');
                 var count = 0;
                 $.each(kh.param.options, function(i, k) {
                     if (!($("#backing_backer_reward_id_" + k).next().find(".pledge__limit--all-gone").length >= 1)) {
@@ -79,7 +79,6 @@
                     }
                     count++;
                     if (count == kh.param.options.length) {
-                        $("body").prepend('<div class="kh_refresher_stop" style="z-index: 9999;position: fixed; height: 100%; width: 100%; background: rgba(0, 0, 0, 0.3); color: #FFF; font-size: 15pt">Click on anywhere to stop ... </div>');
                         $(".kh_refresher_stop").on("click", function(a, b) {
                             kh.storage.update("execute", false);
                             $(this).remove();
@@ -142,8 +141,8 @@
             kh.initParam();
             kh.refresher();
             kh.initState();
-            kh.panel.init();
             kh.addBtn();
+            kh.panel.init();
         }
 
     };
